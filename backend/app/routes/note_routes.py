@@ -1,16 +1,22 @@
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Request, Query
 from app.models.note import NoteCreate, NoteUpdate
 from app.contracts import note_services
+from web3 import Web3
 
 router = APIRouter()
 
 @router.get("/notes")
-def get_all_notes():
+def get_all_notes(address: str = Query(..., description="User Ethereum address")):
+    if not Web3.is_address(address):
+        raise HTTPException(status_code=400, detail="Invalid Ethereum address")
+
     try:
-        tasks = note_services.get_tasks()
-        return tasks
+        tasks = note_services.get_tasks_for(address)
+        return {"notes": tasks}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+
 
 @router.post("/notes")
 def create_note(note: NoteCreate):

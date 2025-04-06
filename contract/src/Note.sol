@@ -1,4 +1,3 @@
-// https://chatgpt.com/c/67ee9ce7-2aa8-8012-88d4-3c6085379356
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.13;
 
