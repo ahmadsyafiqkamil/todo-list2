@@ -19,10 +19,13 @@ def get_all_notes(address: str = Query(..., description="User Ethereum address")
 
 
 @router.post("/notes")
-def create_note(note: NoteCreate):
+def create_note(data: NoteCreate):
+    if not Web3.is_address(data.address):
+        raise HTTPException(status_code=400, detail="Invalid Ethereum address")
+    
     try:
-        tx_hash = note_services.add_task(note.title, note.content)
-        return {"tx_hash": tx_hash}
+        tx = note_services.add_task(data.address, data.title, data.content)
+        return {"tx": tx}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 

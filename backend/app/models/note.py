@@ -1,6 +1,7 @@
 from pydantic import BaseModel
 
 class NoteCreate(BaseModel):
+    address: str
     title: str
     content: str
 

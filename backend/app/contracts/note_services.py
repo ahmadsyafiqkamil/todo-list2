@@ -23,20 +23,21 @@ account = w3.eth.account.from_key(PRIVATE_KEY)
 # Transaction Functions (EIP-1559)
 # -------------------------------
 
-def add_task(title: str, content: str):
+def add_task(user_address: str,title: str, content: str):
     tx_function = contract.functions.addTask(content, title)
-    gas_limit, gas_params = utils.get_gas_parameters(tx_function, account.address)
-    nonce = w3.eth.get_transaction_count(account.address)
+    
+    # Estimasi gas dan parameter EIP-1559 untuk user
+    gas_limit, gas_params = utils.get_gas_parameters(tx_function, user_address)
+    nonce = w3.eth.get_transaction_count(user_address)
 
     tx = tx_function.build_transaction({
-        "from": account.address,
+        "from": user_address,
         "nonce": nonce,
         "gas": gas_limit,
         **gas_params
     })
-    signed_tx = account.sign_transaction(tx)
-    tx_hash = w3.eth.send_raw_transaction(signed_tx.raw_transaction)
-    return tx_hash.hex()
+
+    return tx  # frontend akan menandatangani dan broadcast
 
 
 def update_task(task_id: int, title: str, content: str):
