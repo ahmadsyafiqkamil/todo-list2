@@ -1,5 +1,5 @@
 from fastapi import APIRouter, HTTPException, Request, Query
-from app.models.note import NoteCreate, NoteUpdate
+from app.models.note import NoteCreate, NoteUpdate, TaskActionRequest
 from app.contracts import note_services
 from web3 import Web3
 
@@ -16,8 +16,6 @@ def get_all_notes(address: str = Query(..., description="User Ethereum address")
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-
-
 @router.post("/notes")
 def create_note(data: NoteCreate):
     if not Web3.is_address(data.address):
@@ -30,25 +28,40 @@ def create_note(data: NoteCreate):
         raise HTTPException(status_code=500, detail=str(e))
 
 @router.put("/notes/{task_id}")
-def update_note(task_id: int, note: NoteUpdate):
+def update_note(task_id: int, data: NoteUpdate):
+    if not Web3.is_address(data.address):
+        raise HTTPException(status_code=400, detail="Invalid Ethereum address")
+
     try:
-        tx_hash = note_services.update_task(task_id, note.title, note.content)
-        return {"tx_hash": tx_hash}
+        tx = note_services.update_task(data.address, task_id, data.title, data.content)
+        return {"tx": tx}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
+    # try:
+    #     tx_hash = note_services.update_task(task_id, note.title, note.content)
+    #     return {"tx_hash": tx_hash}
+    # except Exception as e:
+    #     raise HTTPException(status_code=500, detail=str(e))
+
 @router.delete("/notes/{task_id}")
-def delete_note(task_id: int):
+def delete_note(task_id: int, data: TaskActionRequest):
+    if not Web3.is_address(data.address):
+        raise HTTPException(status_code=400, detail="Invalid Ethereum address")
+
     try:
-        tx_hash = note_services.delete_task(task_id)
-        return {"tx_hash": tx_hash}
+        tx = note_services.delete_task(data.address, task_id)
+        return {"tx": tx}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
 @router.patch("/notes/{task_id}/complete")
-def complete_note(task_id: int):
+def complete_note(task_id: int, data: TaskActionRequest):
+    if not Web3.is_address(data.address):
+        raise HTTPException(status_code=400, detail="Invalid Ethereum address")
+
     try:
-        tx_hash = note_services.complete_task(task_id)
-        return {"tx_hash": tx_hash}
+        tx = note_services.complete_task(data.address, task_id)
+        return {"tx": tx}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))

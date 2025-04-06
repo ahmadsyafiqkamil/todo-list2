@@ -6,5 +6,9 @@ class NoteCreate(BaseModel):
     content: str
 
 class NoteUpdate(BaseModel):
+    address: str
     title: str
     content: str
+
+class TaskActionRequest(BaseModel):
+    address: str

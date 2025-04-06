@@ -25,7 +25,33 @@ account = w3.eth.account.from_key(PRIVATE_KEY)
 
 def add_task(user_address: str,title: str, content: str):
     tx_function = contract.functions.addTask(content, title)
-    
+    return build_transact(tx_function=tx_function, user_address=user_address)  
+
+
+def update_task(user_address: str, task_id: int, title: str, content: str):
+    tx_function = contract.functions.updateTask(task_id, content, title)
+    return build_transact(tx_function=tx_function, user_address=user_address)  
+
+
+def delete_task(user_address: str, task_id: int):
+    tx_function = contract.functions.deleteTask(task_id)
+    return build_transact(tx_function=tx_function, user_address=user_address)
+
+
+def complete_task(user_address: str, task_id: int):
+    tx_function = contract.functions.completeTask(task_id)
+    return build_transact(tx_function=tx_function, user_address=user_address)
+
+def get_tasks_for(address: str):
+    raw_tasks = contract.functions.getTasks().call({"from": address})
+    return [
+        {"id": t[0], "title": t[1], "content": t[2], "completed": t[3]}
+        for t in raw_tasks
+    ]
+
+
+
+def build_transact(tx_function, user_address):
     # Estimasi gas dan parameter EIP-1559 untuk user
     gas_limit, gas_params = utils.get_gas_parameters(tx_function, user_address)
     nonce = w3.eth.get_transaction_count(user_address)
@@ -37,63 +63,4 @@ def add_task(user_address: str,title: str, content: str):
         **gas_params
     })
 
-    return tx  # frontend akan menandatangani dan broadcast
-
-
-def update_task(task_id: int, title: str, content: str):
-    tx_function = contract.functions.updateTask(task_id, content, title)
-    gas_limit, gas_params = utils.get_gas_parameters(tx_function, account.address)
-    nonce = w3.eth.get_transaction_count(account.address)
-
-    tx = tx_function.build_transaction({
-        "from": account.address,
-        "nonce": nonce,
-        "gas": gas_limit,
-        **gas_params
-    })
-    signed_tx = account.sign_transaction(tx)
-    tx_hash = w3.eth.send_raw_transaction(signed_tx.raw_transaction)
-    return tx_hash.hex()
-
-
-def delete_task(task_id: int):
-    tx_function = contract.functions.deleteTask(task_id)
-    gas_limit, gas_params = utils.get_gas_parameters(tx_function, account.address)
-    nonce = w3.eth.get_transaction_count(account.address)
-
-    tx = tx_function.build_transaction({
-        "from": account.address,
-        "nonce": nonce,
-        "gas": gas_limit,
-        **gas_params
-    })
-    signed_tx = account.sign_transaction(tx)
-    tx_hash = w3.eth.send_raw_transaction(signed_tx.raw_transaction)
-    return tx_hash.hex()
-
-
-def complete_task(task_id: int):
-    tx_function = contract.functions.completeTask(task_id)
-    gas_limit, gas_params = utils.get_gas_parameters(tx_function, account.address)
-    nonce = w3.eth.get_transaction_count(account.address)
-
-    tx = tx_function.build_transaction({
-        "from": account.address,
-        "nonce": nonce,
-        "gas": gas_limit,
-        **gas_params
-    })
-    signed_tx = account.sign_transaction(tx)
-    tx_hash = w3.eth.send_raw_transaction(signed_tx.raw_transaction)
-    return tx_hash.hex()
-
-
-def get_tasks_for(address: str):
-    raw_tasks = contract.functions.getTasks().call({"from": address})
-    return [
-        {"id": t[0], "title": t[1], "content": t[2], "completed": t[3]}
-        for t in raw_tasks
-    ]
-
-
-
+    return tx
