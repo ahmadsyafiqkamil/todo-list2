@@ -6,6 +6,7 @@ import { Textarea } from '@/components/ui/textarea'
 import { Button } from '@/components/ui/button'
 import { useAccount, useWalletClient } from 'wagmi'
 import { toast } from 'sonner'
+import { parseUnits } from 'viem'
 
 export default function AddNoteForm() {
   const { address } = useAccount()
@@ -17,6 +18,7 @@ export default function AddNoteForm() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+
     if (!walletClient || !address) {
       toast.error('Wallet not connected')
       return
@@ -24,45 +26,69 @@ export default function AddNoteForm() {
 
     try {
       setLoading(true)
-      const res = await fetch('/api/notes/tx', {
-        method: 'POST',
-        body: JSON.stringify({ title, content, address }),
-        headers: { 'Content-Type': 'application/json' },
-      })
-      const { tx } = await res.json()
 
-      const txHash = await walletClient.sendTransaction(tx)
+      // 1. Ambil tx dari backend
+      const res = await fetch('/api/notes/', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ title, content, address }),
+      })
+
+      const data = await res.json()
+
+      if (!data?.tx) {
+        throw new Error('No transaction object returned from backend')
+      }
+
+      const { tx } = data
+
+      console.log('TX from backend:', tx)
+
+      // 2. Convert necessary fields to BigInt
+      const txToSend = {
+        ...tx,
+        value: BigInt(tx.value ?? 0),
+        gas: BigInt(tx.gas),
+        maxFeePerGas: BigInt(tx.maxFeePerGas),
+        maxPriorityFeePerGas: BigInt(tx.maxPriorityFeePerGas),
+      }
+
+      console.log('Prepared TX for walletClient:', txToSend)
+
+      // 3. Kirim ke wallet untuk ditandatangani dan dikirim
+      const txHash = await walletClient.sendTransaction(txToSend)
 
       toast.success('Transaction sent', { description: txHash })
       setTitle('')
       setContent('')
     } catch (err: any) {
-      toast.error('Failed to add note', { description: err.message })
+      console.error(err)
+      toast.error('Transaction failed', { description: err.message || 'Unknown error' })
     } finally {
       setLoading(false)
     }
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4 border p-6 rounded-xl shadow-sm">
+    <form
+      onSubmit={handleSubmit}
+      className="space-y-4 border p-6 rounded-xl shadow-sm"
+    >
       <h2 className="text-xl font-semibold">Add New Note</h2>
-
       <Input
-        placeholder="Note title"
+        placeholder="Title"
         value={title}
         onChange={(e) => setTitle(e.target.value)}
         required
       />
-
       <Textarea
-        placeholder="Note content"
+        placeholder="Content"
         value={content}
         onChange={(e) => setContent(e.target.value)}
         required
       />
-
       <Button type="submit" disabled={loading}>
-        {loading ? 'Submitting...' : 'Add Note'}
+        {loading ? 'Sending...' : 'Add Note'}
       </Button>
     </form>
   )

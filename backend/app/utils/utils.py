@@ -1,7 +1,7 @@
 from web3 import Web3
 from app.config import RPC_URL
 
-w3 = Web3(Web3.HTTPProvider(RPC_URL))
+w3 = Web3(Web3.HTTPProvider("https://sepolia.infura.io/v3/003407eef50141a2af1c6b8b39ec0b2c"))
 
 
 def get_gas_parameters(tx_function, sender_address, extra_gas=50000, extra_gwei=2):
