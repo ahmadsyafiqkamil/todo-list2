@@ -10,38 +10,41 @@ type Note = {
   completed: boolean
 }
 
-export default function NoteList() {
+type Props = {
+  refreshSignal: number
+}
+
+export default function NoteList({ refreshSignal }: Props) {
   const { address } = useAccount()
   const [notes, setNotes] = useState<Note[]>([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  useEffect(() => {
+  const fetchNotes = async () => {
     if (!address) return
 
-    const fetchNotes = async () => {
-      setLoading(true)
-      setError(null)
+    setLoading(true)
+    setError(null)
 
-      try {
-        const res = await fetch(
-          `http://127.0.0.1:8000/notes?address=${address}`
-        )
+    try {
+      const res = await fetch(`http://127.0.0.1:8000/notes?address=${address}`)
 
-        if (!res.ok) throw new Error('Failed to fetch notes')
-
-        const data = await res.json()
-        console.log(data.notes)
-        setNotes(data.notes)
-      } catch (err: any) {
-        setError(err.message)
-      } finally {
-        setLoading(false)
+      if (!res.ok) {
+        throw new Error('Failed to fetch notes')
       }
-    }
 
+      const data = await res.json()
+      setNotes(data.notes)
+    } catch (err: any) {
+      setError(err.message || 'Unknown error')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  useEffect(() => {
     fetchNotes()
-  }, [address])
+  }, [address, refreshSignal]) // ✅ fetch ulang saat address berubah atau refreshSignal di-trigger
 
   return (
     <div className="space-y-4">

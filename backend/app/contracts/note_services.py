@@ -56,12 +56,11 @@ def build_transact(tx_function, user_address):
     nonce = w3.eth.get_transaction_count(user_address)
 
     tx = tx_function.build_transaction({
-        "from": user_address,
-        "to": contract.address,
-        "nonce": nonce,
-        "gas": gas_limit,
-        **gas_params
-    })
+    "from": user_address,
+    "nonce": nonce,
+    "gas": gas_limit,
+    **gas_params
+})
 
     # 💡 Convert BigNumber/Hex to int before returning as JSON
     tx["gas"] = int(tx["gas"])
