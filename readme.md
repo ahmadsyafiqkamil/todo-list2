@@ -1,7 +1,3 @@
-Sure! Here's a complete `README.md` file written in English — you can copy and paste it directly:
-
----
-
 ```markdown
 # 📝 Note dApp — Blockchain-Based Note Application
 
@@ -113,7 +109,7 @@ NEXT_PUBLIC_CHAIN_ID=11155111
 ## 🔒 Security Design
 
 - The backend **builds** transactions, but does **not sign or send**
-- The frontend signs transactions via the user’s wallet (e.g., MetaMask)
+- The frontend signs transactions via the user's wallet (e.g., MetaMask)
 - No sensitive user data is stored on the backend
 
 ---
