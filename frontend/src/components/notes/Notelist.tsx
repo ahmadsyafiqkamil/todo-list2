@@ -133,6 +133,52 @@ export default function NoteList({ refreshSignal }: Props) {
     }
   }
 
+  const handleUpdate = async (id: number, updated: { title: string; content: string }) => {
+    if (!walletClient || !address) {
+      toast.error('Wallet not connected')
+      return
+    }
+  
+    try {
+      setLoading(true)
+  
+      const res = await fetch(`http://127.0.0.1:8000/notes/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ address, ...updated }),
+      })
+  
+      if (!res.ok) throw new Error('Failed to update note')
+  
+      const data = await res.json()
+      const { tx } = data
+      if (!tx) throw new Error('No transaction object returned')
+  
+      const txToSend = {
+        ...tx,
+        value: BigInt(tx.value ?? 0),
+        gas: BigInt(tx.gas),
+        maxFeePerGas: BigInt(tx.maxFeePerGas),
+        maxPriorityFeePerGas: BigInt(tx.maxPriorityFeePerGas),
+      }
+  
+      const txHash = await walletClient.sendTransaction(txToSend)
+      toast.success('Transaction sent', { description: txHash })
+  
+      if (!publicClient) throw new Error('Public client not found')
+      await publicClient.waitForTransactionReceipt({ hash: txHash })
+      
+      toast.success('Note updated on chain ✅')
+      fetchNotes()
+    } catch (err: any) {
+      console.error(err)
+      toast.error('Update failed', { description: err.message })
+    } finally {
+      setLoading(false)
+    }
+  }
+
+
   const SkeletonNoteCard = () => (
     <div className="p-4 rounded-xl border space-y-2 shadow-sm">
       <Skeleton className="h-6 w-3/4" />
@@ -167,6 +213,7 @@ export default function NoteList({ refreshSignal }: Props) {
               note={note}
               onDelete={() => handleDelete(note.id)}
               onComplete={() => handleComplete(note.id)}
+              onUpdate={(updated) => handleUpdate(note.id, updated)}
             />
           ))}
         </div>
