@@ -54,6 +54,7 @@ export default function AddNoteForm({ onNoteAdded }: Props) {
       toast.success('Transaction sent', { description: txHash })
 
       // ✅ Tunggu sampai transaksi dikonfirmasi di blockchain
+      if (!publicClient) throw new Error('Public client not found')
       await publicClient.waitForTransactionReceipt({ hash: txHash })
       toast.success('Transaction confirmed on blockchain ✅')
 

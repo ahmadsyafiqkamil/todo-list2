@@ -15,9 +15,14 @@ export default function NotesPage() {
   }
 
   return (
-    <div className="max-w-2xl mx-auto space-y-10">
+    <div >
+      <div className='max-w-2xl mx-auto space-y-10'>
       <AddNoteForm onNoteAdded={() => setRefreshSignal((r) => r + 1)} />
+      </div>
+      
+      <div className='max-w-6xl mx-auto mt-8'>
       <NoteList refreshSignal={refreshSignal} />
+      </div>
     </div>
   )
 }
